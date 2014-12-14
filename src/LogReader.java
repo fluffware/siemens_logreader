@@ -262,7 +262,7 @@ public class LogReader {
 				}
 				createMainWindow(app);
 
-				System.err.println("Running");
+				//System.err.println("Running");
 			}
 		});
 

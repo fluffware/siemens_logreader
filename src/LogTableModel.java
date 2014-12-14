@@ -65,7 +65,6 @@ public class LogTableModel extends AbstractTableModel {
 		result = r;
 		rows.clear();
 		row_count = 0;
-		System.err.println("time_base="+time_base);
 		while(r.next()) {
 			LogRow row = new LogRow();
 			row.Time_msec = Math.round( r.getDouble(SQLColTime_ms)*(3600*24)/1e3) + time_base; // Stored as 1/1e6 days
@@ -94,7 +93,7 @@ public class LogTableModel extends AbstractTableModel {
 
 	@Override
 	public int getRowCount() {
-		System.err.println("getRowCount");
+		// System.err.println("getRowCount");
 		if (result == null)
 			return 0;
 		try {
@@ -107,7 +106,7 @@ public class LogTableModel extends AbstractTableModel {
 					+ e.getMessage());
 			return 0;
 		}
-		System.err.println("row_count = " + row_count);
+		// System.err.println("row_count = " + row_count);
 		return row_count;
 	}
 
