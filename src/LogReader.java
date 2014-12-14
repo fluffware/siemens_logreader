@@ -6,7 +6,6 @@ import javax.swing.table.*;
 
 import java.awt.Color;
 import java.awt.Container;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.sql.*;
 import java.text.DateFormat;
@@ -208,14 +207,16 @@ public class LogReader {
 		JLabel tz_label = new JLabel("Time zone:");
 		top_box.add(tz_label);
 		
-		final SpinnerModel tz_offset = new SpinnerNumberModel(1,-12,12,1);
+		long default_offset = TimeZone.getDefault().getRawOffset() / (1000*3600);
+		final SpinnerModel tz_offset = new SpinnerNumberModel(0,-12,12,1);
 
 		JSpinner tz_spinner = new JSpinner();
 		JSpinner.NumberEditor tz_edit = new JSpinner.NumberEditor(tz_spinner,"+##;-##");
 		tz_edit.getTextField().setColumns(3);
 		System.err.println("Editor preferred: "+tz_edit.getPreferredSize());
-		tz_spinner.setEditor(tz_edit);
 		tz_spinner.setModel(tz_offset);
+		tz_spinner.setEditor(tz_edit);
+		tz_offset.setValue(default_offset); // Make the editor show correct value
 		System.err.println("Spinner preferred: "+tz_spinner.getPreferredSize());
 		tz_spinner.setMaximumSize(tz_spinner.getPreferredSize());
 		
