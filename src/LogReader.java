@@ -73,7 +73,8 @@ public class LogReader {
 								+ chooser.getSelectedFile().getPath());
 						stmt = c.prepareStatement("SELECT Time_ms, StateAfter,"
 								+ " MsgClass, MsgNumber,"
-								+ " Var1, Var2, Var3 FROM logdata;",
+								+ " Var1, Var2, Var3, Var4,"
+								+ " Var5, Var6, Var7, Var8 FROM logdata;",
 								ResultSet.TYPE_FORWARD_ONLY,
 								ResultSet.CONCUR_READ_ONLY);
 						ResultSet res = stmt.executeQuery();
@@ -175,20 +176,29 @@ public class LogReader {
 		win.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		final TimeZone tz = new SimpleTimeZone(3600 * 1000, "CET");
 		TableColumnModel cols = new DefaultTableColumnModel();
-		TableColumn col = new TableColumn(0, 10, null, null);
+		TableColumn col = new TableColumn(0, 30, null, null);
 		col.setHeaderValue("ID");
+		col.setResizable(true);
+		col.setMaxWidth(50);
 		cols.addColumn(col);
-		col = new TableColumn(1, 20, new TimeCellRenderer(tz), null);
+		col = new TableColumn(1, 100, new TimeCellRenderer(tz), null);
 		col.setHeaderValue("Time");
+		col.setResizable(true);
+		col.setMaxWidth(150);
 		cols.addColumn(col);
-		col = new TableColumn(2, 20, new DateCellRenderer(tz), null);
+		col = new TableColumn(2, 80, new DateCellRenderer(tz), null);
 		col.setHeaderValue("Date");
+		col.setResizable(true);
+		col.setMaxWidth(150);
 		cols.addColumn(col);
-		col = new TableColumn(3, 10, new StateCellRenderer(), null);
+		col = new TableColumn(3, 40, new StateCellRenderer(), null);
 		col.setHeaderValue("State");
+		col.setResizable(true);
+		col.setMaxWidth(50);
 		cols.addColumn(col);
 		col = new TableColumn(4, 40, null, null);
 		col.setHeaderValue("Description");
+		col.setResizable(true);
 		cols.addColumn(col);
 
 		LogTableModel table_data = new LogTableModel();

@@ -6,7 +6,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 /**
- *  Model that maps from a SQLite datbase containing a Siemens HMI log
+ *  Model that maps from a SQLite database containing a Siemens HMI log
  *  
  * @author ksb
  * 
@@ -57,7 +57,11 @@ public class LogTableModel extends AbstractTableModel {
 	static public final int SQLColVar1 = 5;
 	static public final int SQLColVar2 = 6;
 	static public final int SQLColVar3 = 7; 
-
+	static public final int SQLColVar4 = 8; 
+	static public final int SQLColVar5 = 9; 
+	static public final int SQLColVar6 = 10; 
+	static public final int SQLColVar7 = 11; 
+	static public final int SQLColVar8 = 12; 
 	
 	protected long time_base = -2209165200000L; // Difference between 1900 and 1970
 
@@ -74,12 +78,11 @@ public class LogTableModel extends AbstractTableModel {
 			row.Var1 = r.getString(SQLColVar1);
 			row.Var2 = r.getString(SQLColVar2);
 			row.Var3 = r.getString(SQLColVar3);
-			/*
 			row.Var4 = r.getString(SQLColVar4);
 			row.Var5 = r.getString(SQLColVar5);
 			row.Var6 = r.getString(SQLColVar6);
 			row.Var7 = r.getString(SQLColVar7);
-			row.Var8 = r.getString(SQLColVar8);*/
+			row.Var8 = r.getString(SQLColVar8);
 			rows.add(row);
 			row_count++;
 		}
@@ -110,6 +113,12 @@ public class LogTableModel extends AbstractTableModel {
 		return row_count;
 	}
 
+	private String append_nonempty(String str) {
+		if (str != null && !str.equals("")) {
+			return ";"+str;
+		}
+		return "";
+	}
 	
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
@@ -124,10 +133,15 @@ public class LogTableModel extends AbstractTableModel {
 		case ColState:
 			return row.StateAfter;
 		case ColDescription:
-			return row.Var1 + ";" + row.Var2 + ";" + row.Var3
-					+ ";" + row.Var4 + ";" + row.Var5 + ";"
-					+ row.Var6 + ";" + row.Var7 + ";"
-					+ row.Var8 + ";" + row.MsgText;
+			return row.Var1 
+					+ append_nonempty(row.Var2)
+					+ append_nonempty(row.Var3)
+					+ append_nonempty(row.Var4)
+					+ append_nonempty(row.Var5)
+					+ append_nonempty(row.Var6)
+					+ append_nonempty(row.Var7)
+					+ append_nonempty(row.Var8)
+					+ append_nonempty(row.MsgText);
 		}
 		return null;
 	}
