@@ -1,8 +1,11 @@
 import javax.swing.table.AbstractTableModel;
+
 import java.sql.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.GregorianCalendar;
 
 /**
@@ -14,7 +17,7 @@ import java.util.GregorianCalendar;
  */
 public class LogTableModel extends AbstractTableModel {
 
-	protected class LogRow {
+	public class LogRow {
 		int index;
 		long Time_msec;
 		int MsgProc;
@@ -48,7 +51,9 @@ public class LogTableModel extends AbstractTableModel {
 	static public final int ColDate = 2;
 	static public final int ColState = 3;
 	static public final int ColDescription = 4;
-	static public final int ColCount = 5;
+	static public final int ColRow = 5;
+	static public final int ColRowIndex = 6;
+	static public final int ColCount = 7;
 	
 	static public final int SQLColTime_ms = 1;
 	static public final int SQLColStateAfter = 2;
@@ -142,6 +147,10 @@ public class LogTableModel extends AbstractTableModel {
 					+ append_nonempty(row.Var7)
 					+ append_nonempty(row.Var8)
 					+ append_nonempty(row.MsgText);
+		case ColRow:
+			return row;
+		case ColRowIndex:
+			return rowIndex;
 		}
 		return null;
 	}
@@ -159,7 +168,86 @@ public class LogTableModel extends AbstractTableModel {
 			return Integer.class;
 		case ColDescription:
 			return String.class;
+		case ColRow:
+			return LogRow.class;
+		case ColRowIndex:
+			return Integer.class;
 		}
 		return null;
 	}
+	
+	public SortByIncoming createSortByIncoming() {
+		return new SortByIncoming();
+	}
+	
+	public class SortByIncoming implements Comparator<Integer> {
+		Integer sorted_to_model[];  // Maps from sorted to  model
+		Integer model_to_sorted[];  // Maps from model to sorted
+		class DateComparator implements java.util.Comparator<Integer> {
+			public int compare(Integer r1, Integer r2) {
+				return Long.compare(rows.get(r1).Time_msec,rows.get(r2).Time_msec);
+			}
+		}	
+		
+		// to <= from
+		private void move_row(int from, int to) {
+			//System.err.println("Move "+from+"->"+to);
+			int v = sorted_to_model[from];
+			for (int i = from; i > to; i--) {
+				sorted_to_model[i] = sorted_to_model[i-1];
+			}
+			sorted_to_model[to] = v;
+		}
+		
+		public void sort() {
+			int row_count = getRowCount();
+			sorted_to_model = new Integer[row_count];
+			
+			for (int i = 0; i < row_count; i++) {
+				sorted_to_model[i] = i;
+			}
+
+			// Sort on date
+			Arrays.sort(sorted_to_model, new DateComparator());
+			//System.err.println("RowComparator.sort "+row_count);
+			
+			// Find next incoming event
+			
+			for (int incoming = 0; incoming < row_count; incoming++) {
+				LogRow incoming_row = rows.get(sorted_to_model[incoming]);
+				if ((incoming_row.StateAfter & 0x07) == 1) {
+					//System.err.println("Incoming at "+incoming+" MsgNumber="+incoming_row.MsgNumber);
+					for (int related = incoming + 1; related < row_count; related++) {
+						LogRow related_row = rows.get(sorted_to_model[related]);
+						if (related_row.MsgNumber == incoming_row.MsgNumber) {
+							// Stop looking for related rows if we find another incoming
+							if ((related_row.StateAfter & 0x07) == 1) {
+								//System.err.println("Stopped looking for related. Found incoming at "+related);
+								break;
+							}
+							//System.err.println("Related at "+related+" MsgNumber="+related_row.MsgNumber);
+							incoming++;
+							move_row(related,incoming);
+						}
+					}
+				}
+			}
+			model_to_sorted = new Integer[row_count];
+			for (int i = 0; i < row_count; i++) {
+				model_to_sorted[sorted_to_model[i]] = i;
+			}
+			/*
+			for (int i = 0; i < row_count; i++) System.err.print(" "+sorted_to_model[i]);
+			System.err.println();
+			for (int i = 0; i < row_count; i++) System.err.print(" "+model_to_sorted[i]);
+			System.err.println();
+			*/
+		}
+		
+		public int compare(Integer r1, Integer r2) {
+	//		System.err.println("Compare "+r1+" "+r2);
+			return model_to_sorted[r1] - model_to_sorted[r2];
+		}
+	}
+	
 }

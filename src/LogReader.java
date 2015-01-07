@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.RowSorter.SortKey;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -7,11 +8,14 @@ import javax.swing.table.*;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 
@@ -171,32 +175,34 @@ public class LogReader {
 		public JFrame main;
 	};
 
+	
+	
 	private static void createMainWindow(final App app) {
 		JFrame win = new JFrame("Log reader");
 		win.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		final TimeZone tz = new SimpleTimeZone(3600 * 1000, "CET");
 		TableColumnModel cols = new DefaultTableColumnModel();
-		TableColumn col = new TableColumn(0, 30, null, null);
+		TableColumn col = new TableColumn(LogTableModel.ColID, 30, null, null);
 		col.setHeaderValue("ID");
 		col.setResizable(true);
 		col.setMaxWidth(50);
 		cols.addColumn(col);
-		col = new TableColumn(1, 100, new TimeCellRenderer(tz), null);
+		col = new TableColumn(LogTableModel.ColTime, 100, new TimeCellRenderer(tz), null);
 		col.setHeaderValue("Time");
 		col.setResizable(true);
 		col.setMaxWidth(150);
 		cols.addColumn(col);
-		col = new TableColumn(2, 80, new DateCellRenderer(tz), null);
+		col = new TableColumn(LogTableModel.ColDate, 80, new DateCellRenderer(tz), null);
 		col.setHeaderValue("Date");
 		col.setResizable(true);
 		col.setMaxWidth(150);
 		cols.addColumn(col);
-		col = new TableColumn(3, 40, new StateCellRenderer(), null);
+		col = new TableColumn(LogTableModel.ColState, 40, new StateCellRenderer(), null);
 		col.setHeaderValue("State");
 		col.setResizable(true);
 		col.setMaxWidth(50);
 		cols.addColumn(col);
-		col = new TableColumn(4, 40, null, null);
+		col = new TableColumn(LogTableModel.ColDescription, 40, null, null);
 		col.setHeaderValue("Description");
 		col.setResizable(true);
 		cols.addColumn(col);
@@ -204,7 +210,11 @@ public class LogReader {
 		LogTableModel table_data = new LogTableModel();
 		app.table_data = table_data;
 		JTable table = new JTable(table_data, cols);
-		table.setRowSorter(new TableRowSorter<TableModel>(table_data));
+		final TableRowSorter<TableModel> row_sorter = new TableRowSorter<TableModel>(table_data);
+		final LogTableModel.SortByIncoming row_comparator = table_data.createSortByIncoming();
+		row_sorter.setComparator(LogTableModel.ColRowIndex, row_comparator);
+		table.setRowSorter(row_sorter);
+		
 		JScrollPane scrollpane = new JScrollPane(table);
 
 		Container body = win.getContentPane();
@@ -213,7 +223,21 @@ public class LogReader {
 		Container top_box = new Box(BoxLayout.X_AXIS);
 		
 		top_box.add(Box.createHorizontalGlue());
-		
+		JButton state_sort_button = new JButton("Sort on state");
+		state_sort_button.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				SortKey key = new SortKey(LogTableModel.ColRowIndex, SortOrder.ASCENDING);
+				List<SortKey> list = new ArrayList<SortKey>(1);
+				list.add(key);
+				row_comparator.sort();
+				row_sorter.setSortKeys(list);
+				
+				row_sorter.sort();
+			}
+		});
+		top_box.add(state_sort_button);
 		JLabel tz_label = new JLabel("Time zone:");
 		top_box.add(tz_label);
 		
@@ -223,11 +247,11 @@ public class LogReader {
 		JSpinner tz_spinner = new JSpinner();
 		JSpinner.NumberEditor tz_edit = new JSpinner.NumberEditor(tz_spinner,"+##;-##");
 		tz_edit.getTextField().setColumns(3);
-		System.err.println("Editor preferred: "+tz_edit.getPreferredSize());
+		//System.err.println("Editor preferred: "+tz_edit.getPreferredSize());
 		tz_spinner.setModel(tz_offset);
 		tz_spinner.setEditor(tz_edit);
 		tz_offset.setValue(default_offset); // Make the editor show correct value
-		System.err.println("Spinner preferred: "+tz_spinner.getPreferredSize());
+		//System.err.println("Spinner preferred: "+tz_spinner.getPreferredSize());
 		tz_spinner.setMaximumSize(tz_spinner.getPreferredSize());
 		
 		tz_spinner.addChangeListener(new ChangeListener() {
