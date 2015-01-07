@@ -195,10 +195,12 @@ public class LogReader {
 		protected App app;
 		public FileTransferHandler(App app) {
 			this.app = app;
+			
 		}
 		@Override
 		public boolean canImport(TransferSupport supp) {
-			if (supp.getDropAction() != COPY) return false;
+			if ((supp.getSourceDropActions() & COPY) != COPY) return false;
+			supp.setDropAction(COPY); // Always use copy action
 			return supp.isDataFlavorSupported(DataFlavor.javaFileListFlavor);		
 		}
 		
