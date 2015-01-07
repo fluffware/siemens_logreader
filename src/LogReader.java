@@ -10,10 +10,6 @@ import java.awt.Container;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.dnd.DropTarget;
-import java.awt.dnd.DropTargetAdapter;
-import java.awt.dnd.DropTargetDropEvent;
-import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -192,6 +188,10 @@ public class LogReader {
 
 	
 	private static class FileTransferHandler extends TransferHandler {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 8299947423982568582L;
 		protected App app;
 		public FileTransferHandler(App app) {
 			this.app = app;
