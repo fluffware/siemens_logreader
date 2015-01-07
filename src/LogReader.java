@@ -72,7 +72,6 @@ public class LogReader {
 			FileNameExtensionFilter filter = new FileNameExtensionFilter(
 					"Log database", "rdb");
 			chooser.setFileFilter(filter);
-			app.row_sorter.setComparator(LogTableModel.ColRowIndex, null);
 			int returnVal = chooser.showOpenDialog(app.main);
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
 				open_file(app, chooser.getSelectedFile());
@@ -94,6 +93,7 @@ public class LogReader {
 						ResultSet.TYPE_FORWARD_ONLY,
 						ResultSet.CONCUR_READ_ONLY);
 				ResultSet res = stmt.executeQuery();
+				app.row_sorter.setComparator(LogTableModel.ColRowIndex, null);
 				app.table_data.setResult(res);
 			} catch (Exception e) {
 				JOptionPane.showMessageDialog(
