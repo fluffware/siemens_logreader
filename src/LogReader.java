@@ -67,6 +67,7 @@ public class LogReader {
 			FileNameExtensionFilter filter = new FileNameExtensionFilter(
 					"Log database", "rdb");
 			chooser.setFileFilter(filter);
+			app.row_sorter.setComparator(LogTableModel.ColRowIndex, null);
 			int returnVal = chooser.showOpenDialog(app.main);
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
 				if (chooser.getSelectedFile().exists()) {
@@ -172,6 +173,7 @@ public class LogReader {
 
 	static class App {
 		public LogTableModel table_data;
+		public TableRowSorter<TableModel> row_sorter;
 		public JFrame main;
 	};
 
@@ -212,7 +214,7 @@ public class LogReader {
 		JTable table = new JTable(table_data, cols);
 		final TableRowSorter<TableModel> row_sorter = new TableRowSorter<TableModel>(table_data);
 		final LogTableModel.SortByIncoming row_comparator = table_data.createSortByIncoming();
-		row_sorter.setComparator(LogTableModel.ColRowIndex, row_comparator);
+		
 		table.setRowSorter(row_sorter);
 		
 		JScrollPane scrollpane = new JScrollPane(table);
@@ -231,6 +233,7 @@ public class LogReader {
 				SortKey key = new SortKey(LogTableModel.ColRowIndex, SortOrder.ASCENDING);
 				List<SortKey> list = new ArrayList<SortKey>(1);
 				list.add(key);
+				row_sorter.setComparator(LogTableModel.ColRowIndex, row_comparator);
 				row_comparator.sort();
 				row_sorter.setSortKeys(list);
 				
@@ -277,6 +280,7 @@ public class LogReader {
 		win.pack();
 		win.setVisible(true);
 		app.main = win;
+		app.row_sorter = row_sorter;
 	}
 
 	/**
