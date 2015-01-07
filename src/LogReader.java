@@ -7,8 +7,17 @@ import javax.swing.table.*;
 
 import java.awt.Color;
 import java.awt.Container;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetAdapter;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -70,36 +79,40 @@ public class LogReader {
 			app.row_sorter.setComparator(LogTableModel.ColRowIndex, null);
 			int returnVal = chooser.showOpenDialog(app.main);
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
-				if (chooser.getSelectedFile().exists()) {
-					Connection c = null;
-					try {
-						PreparedStatement stmt;
-						c = DriverManager.getConnection("jdbc:sqlite:"
-								+ chooser.getSelectedFile().getPath());
-						stmt = c.prepareStatement("SELECT Time_ms, StateAfter,"
-								+ " MsgClass, MsgNumber,"
-								+ " Var1, Var2, Var3, Var4,"
-								+ " Var5, Var6, Var7, Var8 FROM logdata;",
-								ResultSet.TYPE_FORWARD_ONLY,
-								ResultSet.CONCUR_READ_ONLY);
-						ResultSet res = stmt.executeQuery();
-						app.table_data.setResult(res);
-					} catch (Exception e) {
-						JOptionPane.showMessageDialog(
-								app.main,
-								"Error while opening log: "
-										+ e.getClass().getName() + ": "
-										+ e.getMessage());
-
-					}
-				} else {
-					JOptionPane.showMessageDialog(app.main,
-							"File doesn't exists");
-				}
+				open_file(app, chooser.getSelectedFile());
 			}
 		}
 	};
 
+	static private void open_file(App app, File file) {
+		if (file.exists()) {
+			Connection c = null;
+			try {
+				PreparedStatement stmt;
+				c = DriverManager.getConnection("jdbc:sqlite:"
+						+ file.getPath());
+				stmt = c.prepareStatement("SELECT Time_ms, StateAfter,"
+						+ " MsgClass, MsgNumber,"
+						+ " Var1, Var2, Var3, Var4,"
+						+ " Var5, Var6, Var7, Var8 FROM logdata;",
+						ResultSet.TYPE_FORWARD_ONLY,
+						ResultSet.CONCUR_READ_ONLY);
+				ResultSet res = stmt.executeQuery();
+				app.table_data.setResult(res);
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(
+						app.main,
+						"Error while opening log: "
+								+ e.getClass().getName() + ": "
+								+ e.getMessage());
+
+			}
+		} else {
+			JOptionPane.showMessageDialog(app.main,
+					"File doesn't exists");
+		}
+	}
+	
 	static class TimeCellRenderer extends DefaultTableCellRenderer {
 
 		private static final long serialVersionUID = -9001968935061826439L;
@@ -178,6 +191,35 @@ public class LogReader {
 	};
 
 	
+	private static class FileTransferHandler extends TransferHandler {
+		protected App app;
+		public FileTransferHandler(App app) {
+			this.app = app;
+		}
+		@Override
+		public boolean canImport(TransferSupport supp) {
+			if (supp.getDropAction() != COPY) return false;
+			return supp.isDataFlavorSupported(DataFlavor.javaFileListFlavor);		
+		}
+		
+		@Override
+		public boolean importData(TransferSupport supp) {
+			if (!canImport(supp)) return false;
+			Transferable t = supp.getTransferable();
+			try {
+				@SuppressWarnings("unchecked")
+				List<File> files = (List<File>) t.getTransferData(DataFlavor.javaFileListFlavor);
+				if (files.size() < 1) return false;
+				File file = files.get(0);
+				open_file(app, file);
+			} catch (UnsupportedFlavorException e) {
+				return false;
+			} catch (IOException e) {
+				return false;
+			}
+			return true;
+		}
+	}
 	
 	private static void createMainWindow(final App app) {
 		JFrame win = new JFrame("Log reader");
@@ -216,6 +258,7 @@ public class LogReader {
 		final LogTableModel.SortByIncoming row_comparator = table_data.createSortByIncoming();
 		
 		table.setRowSorter(row_sorter);
+		
 		
 		JScrollPane scrollpane = new JScrollPane(table);
 
@@ -269,6 +312,7 @@ public class LogReader {
 		top_box.add(tz_spinner);
 		
 		body.add(top_box);
+		win.setTransferHandler(new FileTransferHandler(app));
 
 		body.add(scrollpane);
 		JMenuBar menu_bar = new JMenuBar();
